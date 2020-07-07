@@ -1,13 +1,15 @@
 function enviar(e){
-    var range = e.range;
-    var check = range.getValue();
+    var range = e.range;//rango donde se realizó el cambio
+    var check = range.getValue();//Valor de la casilla del Spreadsheet, si se elige inicia la fiesta
+    /*Obtención de las coordenadas del cambio*/
     var colum = range.getColumn();
     var row = range.getRow();
     
+    /*Si la celda modificada fue la casilla de verificación esperada*/
     if(check == 1 && colum == 182){
       var miSpread = SpreadsheetApp.getActiveSpreadsheet();
       var sheet = miSpread.getActiveSheet();
-      
+      /*Obtención de los valores de todas las variables que intervienen para el documento*/
       var cellEmail = sheet.getRange(row,2);
       var valEmail = cellEmail.getValues();
       var email = valEmail[0][0];
@@ -44,8 +46,10 @@ function enviar(e){
       
       var fecha = new Date();
       var fechaParaDoc = parseFecha(fecha);
-      
+      /*Termina bloque de adquisición de valores del Spreadsheet*/
+      /*Creación del PDF */
       const PDFFile = crearPDF(email,fullName,proximoGrado,montoInscripcion,montoMensualidad,periodo,fechaParaDoc);
+      /*Envío de la respuesta*/
       enviarRespuesta(email,PDFFile,fullName);
       }
       else{
@@ -56,21 +60,21 @@ function enviar(e){
       miSpread.getCurrentCell().setValue(valInscripcion);*/
   }
   function crearPDF(email,fullName,proximoGrado,montoInscripcion,montoMensualidad,periodo,fechaParaDoc){
-    const docFile = DriveApp.getFileById('1pMauijf1AnMYg_QHLYxsl3eBcS37sumxhvpRw27jfHQ');
+    const docFile = DriveApp.getFileById('1pMauijf1AnMYg_QHLYxsl3eBcS37sumxhvpRw27jfHQ');//Obtenemos la plantilla
     const docFolder = DriveApp.getFolderById('1pT_yoqSdapMSqoyrwk8GKtrU_n5En4NC');
     const pdfFolder = DriveApp.getFolderById('1O8xf1xxPPBgrkEJhtxt1CPvS7taHBt7N');
-    const tempFile = docFile.makeCopy(docFolder);
+    const tempFile = docFile.makeCopy(docFolder);//Hacemos la copia
     const tempDocFile = DocumentApp.openById(tempFile.getId());
     const body = tempDocFile.getBody();
-    
+    /*Bloque para reemplazar el texto por el valore de las variables en el documento*/
     body.replaceText("{hoy}",fechaParaDoc);
     body.replaceText("{alumno}",fullName);
     body.replaceText("{grado}",proximoGrado);
     body.replaceText("{inscripcion}", montoInscripcion);
     body.replaceText("{mensualidad}", montoMensualidad);
     body.replaceText("{periodo}", periodo);
-    tempDocFile.saveAndClose();
-    
+    tempDocFile.saveAndClose();//Guardar cambios
+    /*Crearción del PDF a partir de un Documento de Google (la copia)*/
     const pdfContentBlob = tempFile.getAs(MimeType.PDF);
     const PDFFile = pdfFolder.createFile(pdfContentBlob).setName(fullName);
     return PDFFile;
@@ -89,7 +93,7 @@ function enviar(e){
             htmlBody: email_html,
             bcc: 'dnegrete@jegv.mx' + ',' + 'administracion@jegv.mx',
             name: 'Informática | JEGV',
-            attachments: [PDFFile]
+            attachments: [PDFFile]//Archivo adjunto
           }
         );
   }
